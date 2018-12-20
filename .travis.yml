@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t shiny26/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run shiny26/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t shiny26/multi-client ./client
+  - docker build -t shiny26/multi-nginx ./nginx
+  - docker build -t shiny26/multi-server ./server
+  - docker build -t shiny26/multi-worker ./worker
+  # log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take thos images and pusht them to docker hub
+  - docker push shiny26/multi-client
+  - docker push shiny26/multi-nginx
+  - docker push shiny26/multi-server
+  - docker push shiny26/multi-worker
